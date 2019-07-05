@@ -89,6 +89,7 @@ history_builtin (list)
 	  flags |= PFLAG;
 #endif
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -156,7 +157,11 @@ history_builtin (list)
   else if (flags & WFLAG)	/* Write entire history. */
     result = write_history (filename);
   else if (flags & RFLAG)	/* Read entire file. */
-    result = read_history (filename);
+    {
+      result = read_history (filename);
+      history_lines_in_file = history_lines_read_from_file;
+      /* history_lines_in_file = where_history () + history_base - 1; */
+    }
   else if (flags & NFLAG)	/* Read `new' history from file. */
     {
       /* Read all of the lines in the file that we haven't already read. */
@@ -167,7 +172,8 @@ history_builtin (list)
       result = read_history_range (filename, history_lines_in_file, -1);
       using_history ();
 
-      history_lines_in_file = where_history ();
+      history_lines_in_file = history_lines_read_from_file;
+      /* history_lines_in_file = where_history () + history_base - 1; */
 
       /* If we're rewriting the history file at shell exit rather than just
 	 appending the lines from this session to it, the question is whether
@@ -202,6 +208,9 @@ histtime (hlist, histtimefmt)
   t = history_get_time (hlist);
   if (t)
     strftime (timestr, sizeof (timestr), histtimefmt, localtime (&t));
+  else if (hlist->timestamp && hlist->timestamp[0])
+    snprintf (timestr, sizeof (timestr), _("%s: invalid timestamp"),
+	(hlist->timestamp[0] == '#') ? hlist->timestamp + 1: hlist->timestamp);
   else
     strcpy (timestr, "??");
   return timestr;

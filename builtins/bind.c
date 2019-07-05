@@ -59,7 +59,7 @@ bind_builtin (list)
   int return_code;
   Keymap kmap, saved_keymap;
   int flags, opt;
-  char *initfile, *map_name, *fun_name, *unbind_name, *remove_seq, *cmd_seq;
+  char *initfile, *map_name, *fun_name, *unbind_name, *remove_seq, *cmd_seq, *t;
 
   if (no_line_editing)
     {
@@ -73,7 +73,7 @@ bind_builtin (list)
 
   kmap = saved_keymap = (Keymap) NULL;
   flags = 0;
-  initfile = map_name = fun_name = unbind_name = remove_seq = (char *)NULL;
+  initfile = map_name = fun_name = unbind_name = remove_seq = cmd_seq = (char *)NULL;
   return_code = EXECUTION_SUCCESS;
 
   if (bash_readline_initialized == 0)
@@ -85,7 +85,7 @@ bind_builtin (list)
   rl_outstream = stdout;
 
   reset_internal_getopt ();  
-  while ((opt = internal_getopt (list, "lvpVPsSXf:q:u:m:r:x:")) != EOF)
+  while ((opt = internal_getopt (list, "lvpVPsSXf:q:u:m:r:x:")) != -1)
     {
       switch (opt)
 	{
@@ -137,6 +137,7 @@ bind_builtin (list)
 	case 'X':
 	  flags |= XXFLAG;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  BIND_RETURN (EX_USAGE);
@@ -192,7 +193,10 @@ bind_builtin (list)
     {
       if (rl_read_init_file (initfile) != 0)
 	{
-	  builtin_error (_("%s: cannot read: %s"), initfile, strerror (errno));
+	  t = printable_filename (initfile, 0);
+	  builtin_error (_("%s: cannot read: %s"), t, strerror (errno));
+	  if (t != initfile)
+	    free (t);
 	  BIND_RETURN (EXECUTION_FAILURE);
 	}
     }

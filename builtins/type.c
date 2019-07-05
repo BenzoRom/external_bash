@@ -121,6 +121,7 @@ type_builtin (list)
 	  dflags |= (CDESC_PATH_ONLY|CDESC_FORCE_PATH);
 	  dflags &= ~(CDESC_TYPE|CDESC_SHORTDESC);
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -157,6 +158,7 @@ type_builtin (list)
  *	CDESC_FORCE_PATH	force a path search for type -P
  *	CDESC_NOFUNCS	skip function lookup for type -f
  *	CDESC_ABSPATH	convert to absolute path, no ./ prefix
+ *	CDESC_STDPATH	command -p standard path list
  *
  * CDESC_ALL says whether or not to look for all occurrences of COMMAND, or
  * return after finding it once.
@@ -167,7 +169,7 @@ describe_command (command, dflags)
      int dflags;
 {
   int found, i, found_file, f, all;
-  char *full_path, *x;
+  char *full_path, *x, *pathlist;
   SHELL_VAR *func;
 #if defined (ALIAS)
   alias_t *alias;
@@ -246,7 +248,12 @@ describe_command (command, dflags)
       if (dflags & CDESC_TYPE)
 	puts ("builtin");
       else if (dflags & CDESC_SHORTDESC)
-	printf (_("%s is a shell builtin\n"), command);
+	{
+	  if (posixly_correct && find_special_builtin (command) != 0)
+	    printf (_("%s is a special shell builtin\n"), command);
+	  else
+	    printf (_("%s is a shell builtin\n"), command);
+	}
       else if (dflags & CDESC_REUSABLE)
 	printf ("%s\n", command);
 
@@ -299,12 +306,17 @@ describe_command (command, dflags)
   /* Now search through $PATH. */
   while (1)
     {
-      if (all == 0)
+      if (dflags & CDESC_STDPATH)	/* command -p, all cannot be non-zero */
+	{
+	  pathlist = conf_standard_path ();
+	  full_path = find_in_path (command, pathlist, FS_EXEC_PREFERRED|FS_NODIRS);
+	  free (pathlist);
+	  /* Will only go through this once, since all == 0 if STDPATH set */
+	}
+      else if (all == 0)
 	full_path = find_user_command (command);
       else
-	full_path =
-	  user_command_matches (command, FS_EXEC_ONLY, found_file);
-	  /* XXX - should that be FS_EXEC_PREFERRED? */
+	full_path = user_command_matches (command, FS_EXEC_ONLY, found_file);	/* XXX - should that be FS_EXEC_PREFERRED? */
 
       if (full_path == 0)
 	break;
@@ -335,7 +347,11 @@ describe_command (command, dflags)
 	}
       /* If we require a full path and don't have one, make one */
       else if ((dflags & CDESC_ABSPATH) && ABSPATH (full_path) == 0)
-	full_path = sh_makepath ((char *)NULL, full_path, MP_DOCWD|MP_RMDOT);
+	{
+	  x = sh_makepath ((char *)NULL, full_path, MP_DOCWD|MP_RMDOT);
+	  free (full_path);
+	  full_path = x;
+	}
 
       found_file++;
       found = 1;

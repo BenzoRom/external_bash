@@ -38,6 +38,8 @@ break_builtin (list)
 {
   intmax_t newbreak;
 
+  CHECK_HELPOPT (list);
+
   if (check_loop_level () == 0)
     return (EXECUTION_SUCCESS);
 
@@ -58,7 +60,7 @@ break_builtin (list)
   return (EXECUTION_SUCCESS);
 }
 
-#line 101 "./break.def"
+#line 103 "./break.def"
 
 /* Set up to continue x levels, where x defaults to 1, but can be specified
    as the first argument. */
@@ -67,6 +69,8 @@ continue_builtin (list)
      WORD_LIST *list;
 {
   intmax_t newcont;
+
+  CHECK_HELPOPT (list);
 
   if (check_loop_level () == 0)
     return (EXECUTION_SUCCESS);

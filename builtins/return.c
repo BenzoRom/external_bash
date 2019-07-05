@@ -29,16 +29,12 @@ int
 return_builtin (list)
      WORD_LIST *list;
 {
-#if 0
-  if (no_options (list))
-    return (EX_USAGE);
-  list = loptend;	/* skip over possible `--' */
-#endif
+  CHECK_HELPOPT (list);
 
   return_catch_value = get_exitstat (list);
 
   if (return_catch_flag)
-    longjmp (return_catch, 1);
+    sh_longjmp (return_catch, 1);
   else
     {
       builtin_error (_("can only `return' from a function or sourced script"));

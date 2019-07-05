@@ -3,7 +3,7 @@
 /* This file is manufactured by ./mkbuiltins, and should not be
    edited by hand.  See the source to mkbuiltins for details. */
 
-/* Copyright (C) 1987-2012 Free Software Foundation, Inc.
+/* Copyright (C) 1987-2015 Free Software Foundation, Inc.
 
    This file is part of GNU Bash, the Bourne Again SHell.
 
@@ -32,6 +32,8 @@
    (array[i].function == (sh_builtin_func_t *)NULL).  Such entries are for
    the list of shell reserved control structures, like `if' and `while'.
    The end of the list is denoted with a NULL name field. */
+
+/* TRANSLATORS: Please do not translate command names in descriptions */
 
 #include "../builtins.h"
 #include "builtext.h"
@@ -65,18 +67,18 @@ struct builtin static_shell_builtins[] = {
   { "pwd", pwd_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | POSIX_BUILTIN, pwd_doc,
      N_("pwd [-LP]"), (char *)NULL },
   { ":", colon_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | SPECIAL_BUILTIN, colon_doc,
-     N_(":"), (char *)NULL },
+     ":", (char *)NULL },
   { "true", colon_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | POSIX_BUILTIN, true_doc,
-     N_("true"), (char *)NULL },
+     "true", (char *)NULL },
   { "false", false_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | POSIX_BUILTIN, false_doc,
-     N_("false"), (char *)NULL },
+     "false", (char *)NULL },
   { "command", command_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | POSIX_BUILTIN, command_doc,
      N_("command [-pVv] command [arg ...]"), (char *)NULL },
-  { "declare", declare_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | ASSIGNMENT_BUILTIN, declare_doc,
+  { "declare", declare_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | ASSIGNMENT_BUILTIN | LOCALVAR_BUILTIN, declare_doc,
      N_("declare [-aAfFgilnrtux] [-p] [name[=value] ...]"), (char *)NULL },
-  { "typeset", declare_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | ASSIGNMENT_BUILTIN, typeset_doc,
-     N_("typeset [-aAfFgilrtux] [-p] name[=value] ..."), (char *)NULL },
-  { "local", local_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | ASSIGNMENT_BUILTIN, local_doc,
+  { "typeset", declare_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | ASSIGNMENT_BUILTIN | LOCALVAR_BUILTIN, typeset_doc,
+     N_("typeset [-aAfFgilnrtux] [-p] name[=value] ..."), (char *)NULL },
+  { "local", local_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | ASSIGNMENT_BUILTIN | LOCALVAR_BUILTIN, local_doc,
      N_("local [option] name[=value] ..."), (char *)NULL },
 #if defined (V9_ECHO)
   { "echo", echo_builtin, BUILTIN_ENABLED | STATIC_BUILTIN, echo_doc,
@@ -126,7 +128,7 @@ struct builtin static_shell_builtins[] = {
 #endif /* JOB_CONTROL */
 #if defined (JOB_CONTROL)
   { "disown", disown_builtin, BUILTIN_ENABLED | STATIC_BUILTIN, disown_doc,
-     N_("disown [-h] [-ar] [jobspec ...]"), (char *)NULL },
+     N_("disown [-h] [-ar] [jobspec ... | pid ...]"), (char *)NULL },
 #endif /* JOB_CONTROL */
   { "kill", kill_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | POSIX_BUILTIN, kill_doc,
      N_("kill [-s sigspec | -n signum | -sigspec] pid | jobspec ... or kill -l [sigspec]"), (char *)NULL },
@@ -159,14 +161,14 @@ struct builtin static_shell_builtins[] = {
   { "[", test_builtin, BUILTIN_ENABLED | STATIC_BUILTIN, test_bracket_doc,
      N_("[ arg... ]"), (char *)NULL },
   { "times", times_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | SPECIAL_BUILTIN, times_doc,
-     N_("times"), (char *)NULL },
+     "times", (char *)NULL },
   { "trap", trap_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | SPECIAL_BUILTIN, trap_doc,
      N_("trap [-lp] [[arg] signal_spec ...]"), (char *)NULL },
   { "type", type_builtin, BUILTIN_ENABLED | STATIC_BUILTIN, type_doc,
      N_("type [-afptP] name [name ...]"), (char *)NULL },
 #if !defined (_MINIX)
   { "ulimit", ulimit_builtin, BUILTIN_ENABLED | STATIC_BUILTIN, ulimit_doc,
-     N_("ulimit [-SHabcdefilmnpqrstuvxT] [limit]"), (char *)NULL },
+     N_("ulimit [-SHabcdefiklmnpqrstuvxPT] [limit]"), (char *)NULL },
 #endif /* !_MINIX */
   { "umask", umask_builtin, BUILTIN_ENABLED | STATIC_BUILTIN | POSIX_BUILTIN, umask_doc,
      N_("umask [-p] [-S] [mode]"), (char *)NULL },
@@ -230,14 +232,14 @@ struct builtin static_shell_builtins[] = {
 #endif /* PROGRAMMABLE_COMPLETION */
 #if defined (PROGRAMMABLE_COMPLETION)
   { "compgen", compgen_builtin, BUILTIN_ENABLED | STATIC_BUILTIN, compgen_doc,
-     N_("compgen [-abcdefgjksuv] [-o option]  [-A action] [-G globpat] [-W wordlist]  [-F function] [-C command] [-X filterpat] [-P prefix] [-S suffix] [word]"), (char *)NULL },
+     N_("compgen [-abcdefgjksuv] [-o option] [-A action] [-G globpat] [-W wordlist]  [-F function] [-C command] [-X filterpat] [-P prefix] [-S suffix] [word]"), (char *)NULL },
 #endif /* PROGRAMMABLE_COMPLETION */
 #if defined (PROGRAMMABLE_COMPLETION)
   { "compopt", compopt_builtin, BUILTIN_ENABLED | STATIC_BUILTIN, compopt_doc,
      N_("compopt [-o|+o option] [-DE] [name ...]"), (char *)NULL },
 #endif /* PROGRAMMABLE_COMPLETION */
   { "mapfile", mapfile_builtin, BUILTIN_ENABLED | STATIC_BUILTIN, mapfile_doc,
-     N_("mapfile [-n count] [-O origin] [-s count] [-t] [-u fd] [-C callback] [-c quantum] [array]"), (char *)NULL },
+     N_("mapfile [-d delim] [-n count] [-O origin] [-s count] [-t] [-u fd] [-C callback] [-c quantum] [array]"), (char *)NULL },
   { "readarray", mapfile_builtin, BUILTIN_ENABLED | STATIC_BUILTIN, readarray_doc,
      N_("readarray [-n count] [-O origin] [-s count] [-t] [-u fd] [-C callback] [-c quantum] [array]"), (char *)NULL },
   { (char *)0x0, (sh_builtin_func_t *)0x0, 0, (char **)0x0, (char *)0x0, (char *)0x0 }
@@ -261,7 +263,7 @@ N_("Define or display aliases.\n\
     alias substitution when the alias is expanded.\n\
     \n\
     Options:\n\
-      -p	Print all defined aliases in a reusable format\n\
+      -p	print all defined aliases in a reusable format\n\
     \n\
     Exit Status:\n\
     alias returns true unless a NAME is supplied for which no alias has been\n\
@@ -276,7 +278,7 @@ char * const unalias_doc[] = {
 N_("Remove each NAME from the list of defined aliases.\n\
     \n\
     Options:\n\
-      -a	remove all alias definitions.\n\
+      -a	remove all alias definitions\n\
     \n\
     Return success unless a NAME is not an existing alias."),
 #endif /* HELP_BUILTIN */
@@ -314,7 +316,7 @@ N_("Set Readline key bindings and variables.\n\
       -f  filename       Read key bindings from FILENAME.\n\
       -x  keyseq:shell-command	Cause SHELL-COMMAND to be executed when\n\
     				KEYSEQ is entered.\n\
-      -X		     List key sequences bound with -x and associated commands\n\
+      -X                 List key sequences bound with -x and associated commands\n\
                          in a form that can be reused as input.\n\
     \n\
     Exit Status:\n\
@@ -397,15 +399,16 @@ N_("Change the shell working directory.\n\
     its value is used for DIR.\n\
     \n\
     Options:\n\
-        -L	force symbolic links to be followed: resolve symbolic links in\n\
-    	DIR after processing instances of `..'\n\
-        -P	use the physical directory structure without following symbolic\n\
-    	links: resolve symbolic links in DIR before processing instances\n\
-    	of `..'\n\
-        -e	if the -P option is supplied, and the current working directory\n\
-    	cannot be determined successfully, exit with a non-zero status\n\
-        -@  on systems that support it, present a file with extended attributes\n\
-            as a directory containing the file attributes\n\
+      -L	force symbolic links to be followed: resolve symbolic\n\
+    		links in DIR after processing instances of `..'\n\
+      -P	use the physical directory structure without following\n\
+    		symbolic links: resolve symbolic links in DIR before\n\
+    		processing instances of `..'\n\
+      -e	if the -P option is supplied, and the current working\n\
+    		directory cannot be determined successfully, exit with\n\
+    		a non-zero status\n\
+      -@	on systems that support it, present a file with extended\n\
+    		attributes as a directory containing the file attributes\n\
     \n\
     The default is to follow symbolic links, as if `-L' were specified.\n\
     `..' is processed by removing the immediately previous pathname component\n\
@@ -423,7 +426,7 @@ N_("Print the name of the current working directory.\n\
     \n\
     Options:\n\
       -L	print the value of $PWD if it names the current working\n\
-    	directory\n\
+    		directory\n\
       -P	print the physical directory, without any symbolic links\n\
     \n\
     By default, `pwd' behaves as if `-L' were specified.\n\
@@ -472,10 +475,10 @@ N_("Execute a simple command or display information about commands.\n\
     on disk when a function with the same name exists.\n\
     \n\
     Options:\n\
-      -p	use a default value for PATH that is guaranteed to find all of\n\
-    	the standard utilities\n\
-      -v	print a description of COMMAND similar to the `type' builtin\n\
-      -V	print a more verbose description of each COMMAND\n\
+      -p    use a default value for PATH that is guaranteed to find all of\n\
+            the standard utilities\n\
+      -v    print a description of COMMAND similar to the `type' builtin\n\
+      -V    print a more verbose description of each COMMAND\n\
     \n\
     Exit Status:\n\
     Returns exit status of COMMAND, or failure if COMMAND is not found."),
@@ -492,9 +495,9 @@ N_("Set variable values and attributes.\n\
     Options:\n\
       -f	restrict action or display to function names and definitions\n\
       -F	restrict display to function names only (plus line number and\n\
-    	source file when debugging)\n\
+    		source file when debugging)\n\
       -g	create global variables when used in a shell function; otherwise\n\
-    	ignored\n\
+    		ignored\n\
       -p	display the attributes and value of each NAME\n\
     \n\
     Options which set attributes:\n\
@@ -526,7 +529,7 @@ char * const typeset_doc[] = {
 #if defined (HELP_BUILTIN)
 N_("Set variable values and attributes.\n\
     \n\
-    Obsolete.  See `help declare'."),
+    A synonym for `declare'.  See `help declare'."),
 #endif /* HELP_BUILTIN */
   (char *)NULL
 };
@@ -572,9 +575,9 @@ N_("Write arguments to the standard output.\n\
       \\v	vertical tab\n\
       \\\\	backslash\n\
       \\0nnn	the character whose ASCII code is NNN (octal).  NNN can be\n\
-    	0 to 3 octal digits\n\
+    		0 to 3 octal digits\n\
       \\xHH	the eight-bit character whose value is HH (hexadecimal).  HH\n\
-    	can be one or two hex digits\n\
+    		can be one or two hex digits\n\
     \n\
     Exit Status:\n\
     Returns success unless a write error occurs."),
@@ -690,8 +693,8 @@ N_("Replace the shell with the given command.\n\
     \n\
     Options:\n\
       -a name	pass NAME as the zeroth argument to COMMAND\n\
-      -c		execute COMMAND with an empty environment\n\
-      -l		place a dash in the zeroth argument to COMMAND\n\
+      -c	execute COMMAND with an empty environment\n\
+      -l	place a dash in the zeroth argument to COMMAND\n\
     \n\
     If the command cannot be executed, a non-interactive shell exits, unless\n\
     the shell option `execfail' is set.\n\
@@ -787,15 +790,15 @@ N_("Remember or display program locations.\n\
     no arguments are given, information about remembered commands is displayed.\n\
     \n\
     Options:\n\
-      -d		forget the remembered location of each NAME\n\
-      -l		display in a format that may be reused as input\n\
+      -d	forget the remembered location of each NAME\n\
+      -l	display in a format that may be reused as input\n\
       -p pathname	use PATHNAME as the full pathname of NAME\n\
-      -r		forget all remembered locations\n\
-      -t		print the remembered location of each NAME, preceding\n\
+      -r	forget all remembered locations\n\
+      -t	print the remembered location of each NAME, preceding\n\
     		each location with the corresponding NAME if multiple\n\
     		NAMEs are given\n\
     Arguments:\n\
-      NAME		Each NAME is searched for in $PATH and added to the list\n\
+      NAME	Each NAME is searched for in $PATH and added to the list\n\
     		of remembered commands.\n\
     \n\
     Exit Status:\n\
@@ -816,7 +819,7 @@ N_("Display information about builtin commands.\n\
       -d	output short description for each topic\n\
       -m	display usage in pseudo-manpage format\n\
       -s	output only a short usage synopsis for each topic matching\n\
-    	PATTERN\n\
+    		PATTERN\n\
     \n\
     Arguments:\n\
       PATTERN	Pattern specifiying a help topic\n\
@@ -837,23 +840,23 @@ N_("Display or manipulate the history list.\n\
     \n\
     Options:\n\
       -c	clear the history list by deleting all of the entries\n\
-      -d offset	delete the history entry at offset OFFSET.\n\
+      -d offset	delete the history entry at position OFFSET.\n\
     \n\
       -a	append history lines from this session to the history file\n\
       -n	read all history lines not already read from the history file\n\
+    		and append them to the history list\n\
       -r	read the history file and append the contents to the history\n\
-    	list\n\
+    		list\n\
       -w	write the current history to the history file\n\
-    	and append them to the history list\n\
     \n\
       -p	perform history expansion on each ARG and display the result\n\
-    	without storing it in the history list\n\
+    		without storing it in the history list\n\
       -s	append the ARGs to the history list as a single entry\n\
     \n\
     If FILENAME is given, it is used as the history file.  Otherwise,\n\
-    if $HISTFILE has a value, that is used, else ~/.bash_history.\n\
+    if HISTFILE has a value, that is used, else ~/.bash_history.\n\
     \n\
-    If the $HISTTIMEFORMAT variable is set and not null, its value is used\n\
+    If the HISTTIMEFORMAT variable is set and not null, its value is used\n\
     as a format string for strftime(3) to print the time stamp associated\n\
     with each displayed history entry.  No time stamps are printed otherwise.\n\
     \n\
@@ -874,7 +877,7 @@ N_("Display status of jobs.\n\
     Options:\n\
       -l	lists process IDs in addition to the normal information\n\
       -n	lists only processes that have changed status since the last\n\
-    	notification\n\
+    		notification\n\
       -p	lists process IDs only\n\
       -r	restrict output to running jobs\n\
       -s	restrict output to stopped jobs\n\
@@ -901,7 +904,7 @@ N_("Remove jobs from current shell.\n\
     Options:\n\
       -a	remove all jobs if JOBSPEC is not supplied\n\
       -h	mark each JOBSPEC so that SIGHUP is not sent to the job if the\n\
-    	shell receives a SIGHUP\n\
+    		shell receives a SIGHUP\n\
       -r	remove only running jobs\n\
     \n\
     Exit Status:\n\
@@ -922,7 +925,8 @@ N_("Send a signal to a job.\n\
       -s sig	SIG is a signal name\n\
       -n sig	SIG is a signal number\n\
       -l	list the signal names; if arguments follow `-l' they are\n\
-    	assumed to be signal numbers for which names should be listed\n\
+    		assumed to be signal numbers for which names should be listed\n\
+      -L	synonym for -l\n\
     \n\
     Kill is a shell builtin for two reasons: it allows job IDs to be used\n\
     instead of process IDs, and allows processes to be killed if the limit\n\
@@ -996,25 +1000,27 @@ N_("Read a line from the standard input and split it into fields.\n\
     		variable ARRAY, starting at zero\n\
       -d delim	continue until the first character of DELIM is read, rather\n\
     		than newline\n\
-      -e		use Readline to obtain the line in an interactive shell\n\
-      -i text	Use TEXT as the initial text for Readline\n\
+      -e	use Readline to obtain the line in an interactive shell\n\
+      -i text	use TEXT as the initial text for Readline\n\
       -n nchars	return after reading NCHARS characters rather than waiting\n\
-    		for a newline, but honor a delimiter if fewer than NCHARS\n\
-    		characters are read before the delimiter\n\
+    		for a newline, but honor a delimiter if fewer than\n\
+    		NCHARS characters are read before the delimiter\n\
       -N nchars	return only after reading exactly NCHARS characters, unless\n\
-    		EOF is encountered or read times out, ignoring any delimiter\n\
+    		EOF is encountered or read times out, ignoring any\n\
+    		delimiter\n\
       -p prompt	output the string PROMPT without a trailing newline before\n\
     		attempting to read\n\
-      -r		do not allow backslashes to escape any characters\n\
-      -s		do not echo input coming from a terminal\n\
-      -t timeout	time out and return failure if a complete line of input is\n\
-    		not read within TIMEOUT seconds.  The value of the TMOUT\n\
-    		variable is the default timeout.  TIMEOUT may be a\n\
-    		fractional number.  If TIMEOUT is 0, read returns immediately,\n\
-    		without trying to read any data, returning success only if\n\
-    		input is available on the specified file descriptor.  The\n\
-    		exit status is greater than 128 if the timeout is exceeded\n\
-      -u fd		read from file descriptor FD instead of the standard input\n\
+      -r	do not allow backslashes to escape any characters\n\
+      -s	do not echo input coming from a terminal\n\
+      -t timeout	time out and return failure if a complete line of\n\
+    		input is not read within TIMEOUT seconds.  The value of the\n\
+    		TMOUT variable is the default timeout.  TIMEOUT may be a\n\
+    		fractional number.  If TIMEOUT is 0, read returns\n\
+    		immediately, without trying to read any data, returning\n\
+    		success only if input is available on the specified\n\
+    		file descriptor.  The exit status is greater than 128\n\
+    		if the timeout is exceeded\n\
+      -u fd	read from file descriptor FD instead of the standard input\n\
     \n\
     Exit Status:\n\
     The return code is zero, unless end-of-file is encountered, read times out\n\
@@ -1103,7 +1109,7 @@ N_("Set or unset values of shell options and positional parameters.\n\
           by default when the shell is interactive.\n\
       -P  If set, do not resolve symbolic links when executing commands\n\
           such as cd which change the current directory.\n\
-      -T  If set, the DEBUG trap is inherited by shell functions.\n\
+      -T  If set, the DEBUG and RETURN traps are inherited by shell functions.\n\
       --  Assign any remaining arguments to the positional parameters.\n\
           If there are no remaining arguments, the positional parameters\n\
           are unset.\n\
@@ -1131,7 +1137,7 @@ N_("Unset values and attributes of shell variables and functions.\n\
       -f	treat each NAME as a shell function\n\
       -v	treat each NAME as a shell variable\n\
       -n	treat each NAME as a name reference and unset the variable itself\n\
-    	rather than the variable it references\n\
+    		rather than the variable it references\n\
     \n\
     Without options, unset first tries to unset a variable, and if that fails,\n\
     tries to unset a function.\n\
@@ -1174,8 +1180,8 @@ N_("Mark shell variables as unchangeable.\n\
       -a	refer to indexed array variables\n\
       -A	refer to associative array variables\n\
       -f	refer to shell functions\n\
-      -p	display a list of all readonly variables or functions, depending on\n\
-            whether or not the -f option is given\n\
+      -p	display a list of all readonly variables or functions,\n\
+    		depending on whether or not the -f option is given\n\
     \n\
     An argument of `--' disables further option processing.\n\
     \n\
@@ -1305,8 +1311,9 @@ N_("Evaluate conditional expression.\n\
     Other operators:\n\
     \n\
       -o OPTION      True if the shell option OPTION is enabled.\n\
-      -v VAR	 True if the shell variable VAR is set\n\
-      -R VAR	 True if the shell variable VAR is set and is a name reference.\n\
+      -v VAR         True if the shell variable VAR is set.\n\
+      -R VAR         True if the shell variable VAR is set and is a name\n\
+                     reference.\n\
       ! EXPR         True if expr is false.\n\
       EXPR1 -a EXPR2 True if both expr1 AND expr2 are true.\n\
       EXPR1 -o EXPR2 True if either expr1 OR expr2 is true.\n\
@@ -1390,18 +1397,18 @@ N_("Display information about command type.\n\
     \n\
     Options:\n\
       -a	display all locations containing an executable named NAME;\n\
-    	includes aliases, builtins, and functions, if and only if\n\
-    	the `-p' option is not also used\n\
+    		includes aliases, builtins, and functions, if and only if\n\
+    		the `-p' option is not also used\n\
       -f	suppress shell function lookup\n\
       -P	force a PATH search for each NAME, even if it is an alias,\n\
-    	builtin, or function, and returns the name of the disk file\n\
-    	that would be executed\n\
+    		builtin, or function, and returns the name of the disk file\n\
+    		that would be executed\n\
       -p	returns either the name of the disk file that would be executed,\n\
-    	or nothing if `type -t NAME' would not return `file'.\n\
+    		or nothing if `type -t NAME' would not return `file'\n\
       -t	output a single word which is one of `alias', `keyword',\n\
-    	`function', `builtin', `file' or `', if NAME is an alias, shell\n\
-    	reserved word, shell function, shell builtin, disk file, or not\n\
-    	found, respectively\n\
+    		`function', `builtin', `file' or `', if NAME is an alias,\n\
+    		shell reserved word, shell function, shell builtin, disk file,\n\
+    		or not found, respectively\n\
     \n\
     Arguments:\n\
       NAME	Command name to be interpreted.\n\
@@ -1429,6 +1436,7 @@ N_("Modify shell resource limits.\n\
       -e	the maximum scheduling priority (`nice')\n\
       -f	the maximum size of files written by the shell and its children\n\
       -i	the maximum number of pending signals\n\
+      -k	the maximum number of kqueues allocated for this process\n\
       -l	the maximum size a process may lock into memory\n\
       -m	the maximum resident set size\n\
       -n	the maximum number of open file descriptors\n\
@@ -1440,7 +1448,8 @@ N_("Modify shell resource limits.\n\
       -u	the maximum number of user processes\n\
       -v	the size of virtual memory\n\
       -x	the maximum number of file locks\n\
-      -T    the maximum number of threads\n\
+      -P	the maximum number of pseudoterminals\n\
+      -T	the maximum number of threads\n\
     \n\
     Not all options are available on all platforms.\n\
     \n\
@@ -1649,7 +1658,7 @@ N_("Create a coprocess named NAME.\n\
     The default NAME is \"COPROC\".\n\
     \n\
     Exit Status:\n\
-    Returns the exit status of COMMAND."),
+    The coproc command returns an exit status of 0."),
 #endif /* HELP_BUILTIN */
   (char *)NULL
 };
@@ -1799,19 +1808,19 @@ N_("Add directories to stack.\n\
     \n\
     Options:\n\
       -n	Suppresses the normal change of directory when adding\n\
-    	directories to the stack, so only the stack is manipulated.\n\
+    		directories to the stack, so only the stack is manipulated.\n\
     \n\
     Arguments:\n\
       +N	Rotates the stack so that the Nth directory (counting\n\
-    	from the left of the list shown by `dirs', starting with\n\
-    	zero) is at the top.\n\
+    		from the left of the list shown by `dirs', starting with\n\
+    		zero) is at the top.\n\
     \n\
       -N	Rotates the stack so that the Nth directory (counting\n\
-    	from the right of the list shown by `dirs', starting with\n\
-    	zero) is at the top.\n\
+    		from the right of the list shown by `dirs', starting with\n\
+    		zero) is at the top.\n\
     \n\
       dir	Adds DIR to the directory stack at the top, making it the\n\
-    	new current working directory.\n\
+    		new current working directory.\n\
     \n\
     The `dirs' builtin displays the directory stack.\n\
     \n\
@@ -1832,16 +1841,16 @@ N_("Remove directories from stack.\n\
     \n\
     Options:\n\
       -n	Suppresses the normal change of directory when removing\n\
-    	directories from the stack, so only the stack is manipulated.\n\
+    		directories from the stack, so only the stack is manipulated.\n\
     \n\
     Arguments:\n\
       +N	Removes the Nth entry counting from the left of the list\n\
-    	shown by `dirs', starting with zero.  For example: `popd +0'\n\
-    	removes the first directory, `popd +1' the second.\n\
+    		shown by `dirs', starting with zero.  For example: `popd +0'\n\
+    		removes the first directory, `popd +1' the second.\n\
     \n\
       -N	Removes the Nth entry counting from the right of the list\n\
-    	shown by `dirs', starting with zero.  For example: `popd -0'\n\
-    	removes the last directory, `popd -1' the next to last.\n\
+    		shown by `dirs', starting with zero.  For example: `popd -0'\n\
+    		removes the last directory, `popd -1' the next to last.\n\
     \n\
     The `dirs' builtin displays the directory stack.\n\
     \n\
@@ -1864,17 +1873,19 @@ N_("Display directory stack.\n\
     Options:\n\
       -c	clear the directory stack by deleting all of the elements\n\
       -l	do not print tilde-prefixed versions of directories relative\n\
-    	to your home directory\n\
+    		to your home directory\n\
       -p	print the directory stack with one entry per line\n\
       -v	print the directory stack with one entry per line prefixed\n\
-    	with its position in the stack\n\
+    		with its position in the stack\n\
     \n\
     Arguments:\n\
-      +N	Displays the Nth entry counting from the left of the list shown by\n\
-    	dirs when invoked without options, starting with zero.\n\
+      +N	Displays the Nth entry counting from the left of the list\n\
+    		shown by dirs when invoked without options, starting with\n\
+    		zero.\n\
     \n\
-      -N	Displays the Nth entry counting from the right of the list shown by\n\
-    	dirs when invoked without options, starting with zero.\n\
+      -N	Displays the Nth entry counting from the right of the list\n\
+    		shown by dirs when invoked without options, starting with\n\
+    		zero.\n\
     \n\
     Exit Status:\n\
     Returns success unless an invalid option is supplied or an error occurs."),
@@ -1922,8 +1933,8 @@ N_("Formats and prints ARGUMENTS under control of the FORMAT.\n\
     \n\
       %b	expand backslash escape sequences in the corresponding argument\n\
       %q	quote the argument in a way that can be reused as shell input\n\
-      %(fmt)T output the date-time string resulting from using FMT as a format\n\
-            string for strftime(3)\n\
+      %(fmt)T	output the date-time string resulting from using FMT as a format\n\
+    	        string for strftime(3)\n\
     \n\
     The format is re-used as necessary to consume all of the arguments.  If\n\
     there are fewer arguments than the format requires,  extra format\n\
@@ -1948,11 +1959,11 @@ N_("Specify how arguments are to be completed by Readline.\n\
     Options:\n\
       -p	print existing completion specifications in a reusable format\n\
       -r	remove a completion specification for each NAME, or, if no\n\
-    	NAMEs are supplied, all completion specifications\n\
+    		NAMEs are supplied, all completion specifications\n\
       -D	apply the completions and actions as the default for commands\n\
-    	without any specific completion defined\n\
+    		without any specific completion defined\n\
       -E	apply the completions and actions to \"empty\" commands --\n\
-    	completion attempted on a blank line\n\
+    		completion attempted on a blank line\n\
     \n\
     When completion is attempted, the actions are applied in the order the\n\
     uppercase-letter options are listed above.  The -D option takes\n\
@@ -2019,16 +2030,18 @@ N_("Read lines from the standard input into an indexed array variable.\n\
     is the default ARRAY.\n\
     \n\
     Options:\n\
-      -n count	Copy at most COUNT lines.  If COUNT is 0, all lines are copied.\n\
-      -O origin	Begin assigning to ARRAY at index ORIGIN.  The default index is 0.\n\
-      -s count 	Discard the first COUNT lines read.\n\
-      -t		Remove a trailing newline from each line read.\n\
-      -u fd		Read lines from file descriptor FD instead of the standard input.\n\
-      -C callback	Evaluate CALLBACK each time QUANTUM lines are read.\n\
-      -c quantum	Specify the number of lines read between each call to CALLBACK.\n\
+      -d delim	Use DELIM to terminate lines, instead of newline\n\
+      -n count	Copy at most COUNT lines.  If COUNT is 0, all lines are copied\n\
+      -O origin	Begin assigning to ARRAY at index ORIGIN.  The default index is 0\n\
+      -s count	Discard the first COUNT lines read\n\
+      -t	Remove a trailing DELIM from each line read (default newline)\n\
+      -u fd	Read lines from file descriptor FD instead of the standard input\n\
+      -C callback	Evaluate CALLBACK each time QUANTUM lines are read\n\
+      -c quantum	Specify the number of lines read between each call to\n\
+    			CALLBACK\n\
     \n\
     Arguments:\n\
-      ARRAY		Array variable name to use for file data.\n\
+      ARRAY	Array variable name to use for file data\n\
     \n\
     If -C is supplied without -c, the default quantum is 5000.  When\n\
     CALLBACK is evaluated, it is supplied the index of the next array\n\

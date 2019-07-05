@@ -81,6 +81,7 @@ exec_builtin (list)
 	case 'a':
 	  argv0 = list_optarg;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -104,6 +105,7 @@ exec_builtin (list)
 #endif /* RESTRICTED_SHELL */
 
   args = strvec_from_word_list (list, 1, 0, (int *)NULL);
+  env = (char **)0;
 
   /* A command with a slash anywhere in its name is not looked up in $PATH. */
   command = absolute_program (args[0]) ? args[0] : search_for_command (args[0], 1);
@@ -155,7 +157,10 @@ exec_builtin (list)
     adjust_shell_level (-1);
 
   if (cleanenv)
-    env = (char **)NULL;
+    {
+      env = strvec_create (1);
+      env[0] = (char *)0;
+    }
   else
     {	
       maybe_make_export_env ();
@@ -172,6 +177,8 @@ exec_builtin (list)
 #if defined (JOB_CONTROL)
   if (subshell_environment == 0)
     end_job_control ();
+  if (interactive || job_control)
+    default_tty_job_signals ();		/* undo initialize_job_signals */
 #endif /* JOB_CONTROL */
 
   exit_value = shell_execve (command, args, env);
@@ -201,6 +208,9 @@ failed_exec:
 
   if (args)
     strvec_dispose (args);
+
+  if (env && env != export_env)
+    strvec_dispose (env);
 
   initialize_traps ();
   initialize_signals (1);

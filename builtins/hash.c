@@ -74,6 +74,7 @@ hash_builtin (list)
 	case 't':
 	  list_targets = 1;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -189,7 +190,15 @@ static int
 print_portable_hash_info (item)
      BUCKET_CONTENTS *item;
 {
-  printf ("builtin hash -p %s %s\n", pathdata(item)->path, item->key);
+  char *fp, *fn;
+
+  fp = printable_filename (pathdata(item)->path, 1);
+  fn = printable_filename (item->key, 1);
+  printf ("builtin hash -p %s %s\n", fp, fn);
+  if (fp != pathdata(item)->path)
+    free (fp);
+  if (fn != item->key)
+    free (fn);
   return 0;
 }
 

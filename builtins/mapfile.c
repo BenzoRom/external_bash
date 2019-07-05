@@ -1,9 +1,9 @@
 /* mapfile.c, created from mapfile.def. */
 #line 23 "./mapfile.def"
 
-#line 57 "./mapfile.def"
+#line 59 "./mapfile.def"
 
-#line 65 "./mapfile.def"
+#line 67 "./mapfile.def"
 
 #include <config.h>
 
@@ -43,6 +43,8 @@ static int run_callback __P((const char *, unsigned int, const char *));
 #define MAPF_CLEARARRAY	0x01
 #define MAPF_CHOP	0x02
 
+static int delim;
+
 static int
 run_callback (callback, curindex, curline)
      const char *callback;
@@ -71,21 +73,23 @@ run_callback (callback, curindex, curline)
 }
 
 static void
-do_chop(line)
-     char * line;
+do_chop(line, delim)
+     char *line;
+     unsigned char delim;
 {
   int length;
 
   length = strlen (line);
-  if (length && line[length-1] == '\n') 
+  if (length && line[length-1] == delim) 
     line[length-1] = '\0';
 }
 
 static int
-mapfile (fd, line_count_goal, origin, nskip, callback_quantum, callback, array_name, flags)
+mapfile (fd, line_count_goal, origin, nskip, callback_quantum, callback, array_name, delim, flags)
      int fd;
      long line_count_goal, origin, nskip, callback_quantum;
      char *callback, *array_name;
+     int delim;
      int flags;
 {
   char *line;
@@ -126,11 +130,14 @@ mapfile (fd, line_count_goal, origin, nskip, callback_quantum, callback, array_n
   unbuffered_read = 1;
 #endif
 
+  if (delim != '\n')
+    unbuffered_read = 1;
+
   zreset ();
 
   /* Skip any lines at beginning of file? */
   for (line_count = 0; line_count < nskip; line_count++)
-    if (zgetline (fd, &line, &line_length, unbuffered_read) < 0)
+    if (zgetline (fd, &line, &line_length, delim, unbuffered_read) < 0)
       break;
 
   line = 0;
@@ -138,12 +145,12 @@ mapfile (fd, line_count_goal, origin, nskip, callback_quantum, callback, array_n
 
   /* Reset the buffer for bash own stream */
   for (array_index = origin, line_count = 1; 
- 	zgetline (fd, &line, &line_length, unbuffered_read) != -1;
+ 	zgetline (fd, &line, &line_length, delim, unbuffered_read) != -1;
 	array_index++) 
     {
       /* Remove trailing newlines? */
       if (flags & MAPF_CHOP)
-	do_chop (line);
+	do_chop (line, delim);
 	  
       /* Has a callback been registered and if so is it time to call it? */
       if (callback && line_count && (line_count % callback_quantum) == 0) 
@@ -188,12 +195,16 @@ mapfile_builtin (list)
   flags = MAPF_CLEARARRAY;
   callback_quantum = DEFAULT_QUANTUM;
   callback = 0;
+  delim = '\n';
 
   reset_internal_getopt ();
-  while ((opt = internal_getopt (list, "u:n:O:tC:c:s:")) != -1)
+  while ((opt = internal_getopt (list, "d:u:n:O:tC:c:s:")) != -1)
     {
       switch (opt)
 	{
+	case 'd':
+	  delim = *list_optarg;
+	  break;
 	case 'u':
 	  code = legal_number (list_optarg, &intval);
 	  if (code == 0 || intval < 0 || intval != (int)intval)
@@ -259,6 +270,7 @@ mapfile_builtin (list)
 	  else
 	    nskip = intval;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -281,13 +293,13 @@ mapfile_builtin (list)
   else
     array_name = list->word->word;
   
-  if (legal_identifier (array_name) == 0 && valid_array_reference (array_name) == 0)
+  if (legal_identifier (array_name) == 0)
     {
       sh_invalidid (array_name);
       return (EXECUTION_FAILURE);
     }
 
-  return mapfile (fd, lines, origin, nskip, callback_quantum, callback, array_name, flags);
+  return mapfile (fd, lines, origin, nskip, callback_quantum, callback, array_name, delim, flags);
 }
 
 #else

@@ -33,7 +33,7 @@ static int display_traps __P((WORD_LIST *));
    trap -p [sigspec ...]
    trap [--]
 
-   Set things up so that ARG is executed when SIGNAL(s) N is recieved.
+   Set things up so that ARG is executed when SIGNAL(s) N is received.
    If ARG is the empty string, then ignore the SIGNAL(s).  If there is
    no ARG, then set the trap for SIGNAL(s) to its original value.  Just
    plain "trap" means to print out the list of commands associated with
@@ -45,6 +45,7 @@ static int display_traps __P((WORD_LIST *));
 #define IGNORE 2		/* Ignore this signal. */
 
 extern int posixly_correct, subshell_environment;
+extern int sourcelevel, running_trap;
 
 int
 trap_builtin (list)
@@ -66,6 +67,7 @@ trap_builtin (list)
 	case 'p':
 	  display++;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -157,6 +159,9 @@ trap_builtin (list)
 			/* XXX - should we do this if original disposition
 			   was SIG_IGN? */
 			if (interactive)
+			  set_signal_handler (SIGINT, sigint_sighandler);
+			/* special cases for interactive == 0 */
+			else if (interactive_shell && (sourcelevel||running_trap))
 			  set_signal_handler (SIGINT, sigint_sighandler);
 			else
 			  set_signal_handler (SIGINT, termsig_sighandler);

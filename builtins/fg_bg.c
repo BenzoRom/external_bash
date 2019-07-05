@@ -32,6 +32,8 @@ fg_builtin (list)
   int fg_bit;
   register WORD_LIST *t;
 
+  CHECK_HELPOPT (list);
+
   if (job_control == 0)
     {
       sh_nojobs ((char *)NULL);
@@ -52,7 +54,7 @@ fg_builtin (list)
 }
 #endif /* JOB_CONTROL */
 
-#line 99 "./fg_bg.def"
+#line 101 "./fg_bg.def"
 
 #if defined (JOB_CONTROL)
 /* How to put a job into the background. */
@@ -61,6 +63,8 @@ bg_builtin (list)
      WORD_LIST *list;
 {
   int r;
+
+  CHECK_HELPOPT (list);
 
   if (job_control == 0)
     {

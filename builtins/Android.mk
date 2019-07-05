@@ -33,6 +33,7 @@ LOCAL_SRC_FILES:= \
 	hash.c \
 	help.c \
 	history.c \
+	inlib.c \
 	jobs.c \
 	kill.c \
 	let.c \
@@ -73,7 +74,8 @@ LOCAL_CFLAGS += \
 	-Wno-sign-compare \
 	-Wno-unused-function \
 	-Wno-unused-parameter \
-	-Wno-unused-variable
+	-Wno-unused-variable \
+	-Wno-sometimes-uninitialized
 
 LOCAL_MODULE_TAGS := eng
 LOCAL_MODULE := libbuiltins

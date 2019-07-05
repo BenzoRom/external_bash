@@ -48,6 +48,7 @@ alias_builtin (list)
 	  pflag = 1;
 	  dflags |= AL_REUSABLE;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -114,7 +115,7 @@ alias_builtin (list)
 }
 #endif /* ALIAS */
 
-#line 167 "./alias.def"
+#line 168 "./alias.def"
 
 #if defined (ALIAS)
 /* Remove aliases named in LIST from the aliases database. */
@@ -134,6 +135,7 @@ unalias_builtin (list)
 	case 'a':
 	  aflag = 1;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -183,7 +185,7 @@ print_alias (alias, flags)
 
   value = sh_single_quote (alias->value);
   if (flags & AL_REUSABLE)
-    printf ("alias ");
+    printf ("alias %s", (alias->name && alias->name[0] == '-') ? "-- " : "");
   printf ("%s=%s\n", alias->name, value);
   free (value);
 

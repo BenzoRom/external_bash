@@ -15,6 +15,7 @@
 #endif
 
 #include "../bashansi.h"
+#include "../bashintl.h"
 
 #include "../shell.h"
 #include "common.h"
@@ -27,6 +28,7 @@
 
 extern char *this_command_name;
 
+static int getopts_unbind_variable __P((char *));
 static int getopts_bind_variable __P((char *, char *));
 static int dogetopts __P((int, char **));
 
@@ -38,6 +40,17 @@ getopts_reset (newind)
 {
   sh_optind = newind;
   sh_badopt = 0;
+}
+
+static int
+getopts_unbind_variable (name)
+     char *name;
+{
+#if 0
+  return (unbind_variable (name));
+#else
+  return (unbind_variable_noref (name));
+#endif
 }
 
 static int
@@ -194,7 +207,7 @@ dogetopts (argc, argv)
 	    
   if (ret == G_EOF)
     {
-      unbind_variable ("OPTARG");
+      getopts_unbind_variable ("OPTARG");
       getopts_bind_variable (name, "?");
       return (EXECUTION_FAILURE);
     }
@@ -211,7 +224,7 @@ dogetopts (argc, argv)
 	  bind_variable ("OPTARG", strval, 0);
 	}
       else
-	unbind_variable ("OPTARG");
+	getopts_unbind_variable ("OPTARG");
 
       return (ret);
     }
@@ -230,7 +243,7 @@ dogetopts (argc, argv)
       else
 	{
 	  ret = getopts_bind_variable (name, "?");
-	  unbind_variable ("OPTARG");
+	  getopts_unbind_variable ("OPTARG");
 	}
       return (ret);
     }			
@@ -257,9 +270,12 @@ getopts_builtin (list)
     }
 
   reset_internal_getopt ();
-  if (internal_getopt (list, "") != -1)
+  if ((ret = internal_getopt (list, "")) != -1)
     {
-      builtin_usage ();
+      if (ret == GETOPT_HELP)
+	builtin_help ();
+      else
+	builtin_usage ();
       return (EX_USAGE);
     }
   list = loptend;

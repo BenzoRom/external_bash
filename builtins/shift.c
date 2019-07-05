@@ -32,6 +32,8 @@ shift_builtin (list)
   register int count;
   WORD_LIST *temp;
 
+  CHECK_HELPOPT (list);
+
   if (get_numeric_arg (list, 0, &times) == 0)
     return (EXECUTION_FAILURE);
 
@@ -68,5 +70,8 @@ shift_builtin (list)
       else
 	dollar_vars[9] = (char *)NULL;
     }
+
+  invalidate_cached_quoted_dollar_at ();
+
   return (EXECUTION_SUCCESS);
 }

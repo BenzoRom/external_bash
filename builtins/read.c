@@ -1,7 +1,7 @@
 /* read.c, created from read.def. */
 #line 22 "./read.def"
 
-#line 67 "./read.def"
+#line 69 "./read.def"
 
 #include <config.h>
 
@@ -101,8 +101,9 @@ sigalrm (s)
 static void
 reset_alarm ()
 {
-  set_signal_handler (SIGALRM, old_alrm);
+  /* Cancel alarm before restoring signal handler. */
   falarm (0, 0);
+  set_signal_handler (SIGALRM, old_alrm);
 }
 
 /* Read the value of the shell variables whose names follow.
@@ -116,7 +117,8 @@ read_builtin (list)
      WORD_LIST *list;
 {
   register char *varname;
-  int size, i, nr, pass_next, saw_escape, eof, opt, retval, code, print_ps2;
+  int size, nr, pass_next, saw_escape, eof, opt, retval, code, print_ps2;
+  volatile int i;
   int input_is_tty, input_is_pipe, unbuffered_read, skip_ctlesc, skip_ctlnul;
   int raw, edit, nchars, silent, have_timeout, ignore_delim, fd, lastsig, t_errno;
   unsigned int tmsec, tmusec;
@@ -252,6 +254,7 @@ read_builtin (list)
 	case 'd':
 	  delim = *list_optarg;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -271,7 +274,7 @@ read_builtin (list)
   /* Convenience: check early whether or not the first of possibly several
      variable names is a valid identifier, and bail early if so. */
 #if defined (ARRAY_VARS)
-  if (list && legal_identifier (list->word->word) == 0 && valid_array_reference (list->word->word) == 0)
+  if (list && legal_identifier (list->word->word) == 0 && valid_array_reference (list->word->word, 0) == 0)
 #else
   if (list && legal_identifier (list->word->word) == 0)
 #endif
@@ -543,7 +546,7 @@ read_builtin (list)
 	}
 
       CHECK_ALRM;
-
+      QUIT;		/* in case we didn't call check_signals() */
 #if defined (READLINE)
 	}
 #endif
@@ -622,6 +625,11 @@ add_char:
     }
   input_string[i] = '\0';
   CHECK_ALRM;
+
+#if defined (READLINE)
+  if (edit)
+    free (rlbuf);
+#endif
 
   if (retval < 0)
     {
@@ -731,7 +739,10 @@ assign_vars:
 	}
       else
 	var = bind_variable ("REPLY", input_string, 0);
-      VUNSETATTR (var, att_invisible);
+      if (var == 0 || readonly_p (var) || noassign_p (var))
+	retval = EXECUTION_FAILURE;
+      else
+	VUNSETATTR (var, att_invisible);
 
       xfree (input_string);
       return (retval);
@@ -750,7 +761,7 @@ assign_vars:
     {
       varname = list->word->word;
 #if defined (ARRAY_VARS)
-      if (legal_identifier (varname) == 0 && valid_array_reference (varname) == 0)
+      if (legal_identifier (varname) == 0 && valid_array_reference (varname, 0) == 0)
 #else
       if (legal_identifier (varname) == 0)
 #endif
@@ -798,7 +809,7 @@ assign_vars:
 
   /* Now assign the rest of the line to the last variable argument. */
 #if defined (ARRAY_VARS)
-  if (legal_identifier (list->word->word) == 0 && valid_array_reference (list->word->word) == 0)
+  if (legal_identifier (list->word->word) == 0 && valid_array_reference (list->word->word, 0) == 0)
 #else
   if (legal_identifier (list->word->word) == 0)
 #endif
@@ -861,7 +872,7 @@ bind_read_variable (name, value)
   SHELL_VAR *v;
 
 #if defined (ARRAY_VARS)
-  if (valid_array_reference (name) == 0)
+  if (valid_array_reference (name, 0) == 0)
     v = bind_variable (name, value, 0);
   else
     v = assign_array_element (name, value, 0);

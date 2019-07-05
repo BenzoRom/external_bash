@@ -1,9 +1,9 @@
 /* test.c, created from test.def. */
 #line 22 "./test.def"
 
-#line 103 "./test.def"
+#line 104 "./test.def"
 
-#line 113 "./test.def"
+#line 114 "./test.def"
 
 #include <config.h>
 

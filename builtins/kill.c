@@ -1,7 +1,7 @@
 /* kill.c, created from kill.def. */
 #line 22 "./kill.def"
 
-#line 45 "./kill.def"
+#line 46 "./kill.def"
 
 #include <config.h>
 
@@ -56,6 +56,7 @@ kill_builtin (list)
       builtin_usage ();
       return (EX_USAGE);
     }
+  CHECK_HELPOPT (list);
 
   any_succeeded = listing = saw_signal = 0;
   sig = SIGTERM;
@@ -67,7 +68,7 @@ kill_builtin (list)
     {
       word = list->word->word;
 
-      if (ISOPTION (word, 'l'))
+      if (ISOPTION (word, 'l') || ISOPTION (word, 'L'))
 	{
 	  listing++;
 	  list = list->next;

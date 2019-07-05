@@ -66,6 +66,7 @@
       vbadd (b, 1); \
     else \
       putchar (c); \
+    QUIT; \
   } while (0)
 
 #define PF(f, func) \
@@ -81,6 +82,7 @@
     else \
       nw = vflag ? vbprintf (f, func) : printf (f, func); \
     tw += nw; \
+    QUIT; \
     if (ferror (stdout)) \
       { \
 	sh_wrerror (); \
@@ -93,6 +95,7 @@
 #define PRETURN(value) \
   do \
     { \
+      QUIT; \
       if (vflag) \
 	{ \
 	  bind_printf_variable  (vname, vbuf, 0); \
@@ -112,9 +115,9 @@
 	} \
       else if (vbuf) \
 	vbuf[0] = 0; \
-      terminate_immediately--; \
       if (ferror (stdout) == 0) \
 	fflush (stdout); \
+      QUIT; \
       if (ferror (stdout)) \
 	{ \
 	  sh_wrerror (); \
@@ -205,7 +208,7 @@ printf_builtin (list)
 	case 'v':
 	  vname = list_optarg;
 #if defined (ARRAY_VARS)
-	  if (legal_identifier (vname) || valid_array_reference (vname))
+	  if (legal_identifier (vname) || valid_array_reference (vname, 0))
 #else
 	  if (legal_identifier (vname))
 #endif
@@ -223,6 +226,7 @@ printf_builtin (list)
 	      return (EX_USAGE);
 	    }
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -234,6 +238,14 @@ printf_builtin (list)
     {
       builtin_usage ();
       return (EX_USAGE);
+    }
+
+  /* Allow printf -v var "" to act like var="" */
+  if (vflag && list->word->word && list->word->word[0] == '\0')
+    {
+      bind_printf_variable (vname, "", 0);
+      stupidly_hack_special_variables (vname);
+      return (EXECUTION_SUCCESS);
     }
 
   if (list->word->word == 0 || list->word->word[0] == '\0')
@@ -248,8 +260,6 @@ printf_builtin (list)
   if (format == 0 || *format == 0)
     return (EXECUTION_SUCCESS);
 
-  terminate_immediately++;
-	  
   /* Basic algorithm is to scan the format string for conversion
      specifications -- once one is found, find out if the field
      width or precision is a '*'; if it is, gather up value.  Note,
@@ -359,6 +369,7 @@ printf_builtin (list)
 	  modstart[0] = convch;
 	  modstart[1] = '\0';
 
+	  QUIT;
 	  switch(convch)
 	    {
 	    case 'c':
@@ -709,6 +720,8 @@ printstr (fmt, string, len, fieldwidth, precision)
 	  /* Error if precision > INT_MAX here? */
 	  pr = (mpr < 0 || mpr > INT_MAX) ? INT_MAX : mpr;
 	}
+      else
+	pr = 0;		/* "a null digit string is treated as zero" */
     }
 
 #if 0
@@ -995,7 +1008,7 @@ vbprintf (format, va_alist)
 
 #ifdef DEBUG
   if  (strlen (vbuf) != vblen)
-    internal_error  ("printf:vbadd: vblen (%d) != strlen (vbuf) (%d)", vblen, (int)strlen (vbuf));
+    internal_error  ("printf:vbprintf: vblen (%d) != strlen (vbuf) (%d)", vblen, (int)strlen (vbuf));
 #endif
   
   return (blen);
@@ -1205,7 +1218,7 @@ bind_printf_variable (name, value, flags)
   SHELL_VAR *v;
 
 #if defined (ARRAY_VARS)
-  if (valid_array_reference (name) == 0)
+  if (valid_array_reference (name, 0) == 0)
     v = bind_variable (name, value, flags);
   else
     v = assign_array_element (name, value, flags);

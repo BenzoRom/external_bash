@@ -55,6 +55,7 @@ umask_builtin (list)
 	case 'p':
 	  pflag++;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -109,8 +110,12 @@ umask_builtin (list)
 /* Print the umask in a symbolic form.  In the output, a letter is
    printed if the corresponding bit is clear in the umask. */
 static void
+#if defined (__STDC__)
+print_symbolic_umask (mode_t um)
+#else
 print_symbolic_umask (um)
      mode_t um;
+#endif
 {
   char ubits[4], gbits[4], obits[4];		/* u=rwx,g=rwx,o=rwx */
   int i;

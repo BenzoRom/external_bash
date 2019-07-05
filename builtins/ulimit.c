@@ -1,7 +1,7 @@
 /* ulimit.c, created from ulimit.def. */
 #line 22 "./ulimit.def"
 
-#line 70 "./ulimit.def"
+#line 72 "./ulimit.def"
 
 #if !defined (_MINIX)
 
@@ -66,10 +66,16 @@
 #  define print_rlimtype(num, nl) printf ("%ld%s", num, nl ? "\n" : "")
 #endif
 
+/* Alternate names */
+
 /* Some systems use RLIMIT_NOFILE, others use RLIMIT_OFILE */
 #if defined (HAVE_RESOURCE) && defined (RLIMIT_OFILE) && !defined (RLIMIT_NOFILE)
 #  define RLIMIT_NOFILE RLIMIT_OFILE
 #endif /* HAVE_RESOURCE && RLIMIT_OFILE && !RLIMIT_NOFILE */
+
+#if defined (HAVE_RESOURCE) && defined (RLIMIT_POSIXLOCKS) && !defined (RLIMIT_LOCKS)
+#  define RLIMIT_LOCKS RLIMIT_POSIXLOCKS
+#endif /* HAVE_RESOURCE && RLIMIT_POSIXLOCKS && !RLIMIT_LOCKS */
 
 /* Some systems have these, some do not. */
 #ifdef RLIMIT_FSIZE
@@ -158,6 +164,9 @@ typedef struct {
 } RESOURCE_LIMITS;
 
 static RESOURCE_LIMITS limits[] = {
+#ifdef RLIMIT_NPTS
+  { 'P',	RLIMIT_NPTS,  1,	"number of pseudoterminals",	(char *)NULL },
+#endif
 #ifdef RLIMIT_PTHREAD
   { 'T',	RLIMIT_PTHREAD,  1,	"number of threads",	(char *)NULL },
 #endif
@@ -176,6 +185,9 @@ static RESOURCE_LIMITS limits[] = {
   { 'f',	RLIMIT_FILESIZE, POSIXBLK,	"file size",		"blocks" },
 #ifdef RLIMIT_SIGPENDING
   { 'i',	RLIMIT_SIGPENDING, 1,	"pending signals",	(char *)NULL },
+#endif
+#ifdef RLIMIT_KQUEUES
+  { 'k',	RLIMIT_KQUEUES, 1,	"max kqueues",		(char *)NULL },
 #endif
 #ifdef RLIMIT_MEMLOCK
   { 'l',	RLIMIT_MEMLOCK, 1024,	"max locked memory",	"kbytes" },
@@ -294,6 +306,7 @@ ulimit_builtin (list)
 	  mode |= LIMIT_HARD;
 	  break;
 
+	CASE_HELPOPT;
 	case '?':
 	  builtin_usage ();
 	  return (EX_USAGE);

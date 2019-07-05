@@ -52,6 +52,7 @@ extern int autocd;
 extern int glob_star;
 extern int glob_asciirange;
 extern int lastpipe_opt;
+extern int inherit_errexit;
 
 #if defined (EXTENDED_GLOB)
 extern int extended_glob;
@@ -93,14 +94,20 @@ static int set_restricted_shell __P((char *, int));
 static int shopt_set_complete_direxpand __P((char *, int));
 #endif
 
+static int shopt_set_debug_mode __P((char *, int));
+
 static int shopt_login_shell;
 static int shopt_compat31;
 static int shopt_compat32;
 static int shopt_compat40;
 static int shopt_compat41;
 static int shopt_compat42;
+static int shopt_compat43;
 
 typedef int shopt_set_func_t __P((char *, int));
+
+/* If you add a new variable name here, make sure to set the default value
+   appropriately in reset_shopt_options. */
 
 static struct {
   char *name;
@@ -122,7 +129,8 @@ static struct {
   { "compat32", &shopt_compat32, set_compatibility_level },
   { "compat40", &shopt_compat40, set_compatibility_level },
   { "compat41", &shopt_compat41, set_compatibility_level },
-  { "compat42", &shopt_compat41, set_compatibility_level },
+  { "compat42", &shopt_compat42, set_compatibility_level },
+  { "compat43", &shopt_compat43, set_compatibility_level },
 #if defined (READLINE)
   { "complete_fullquote", &complete_fullquote, (shopt_set_func_t *)NULL},
   { "direxpand", &dircomplete_expand, shopt_set_complete_direxpand },
@@ -132,7 +140,7 @@ static struct {
   { "execfail", &no_exit_on_failed_exec, (shopt_set_func_t *)NULL },
   { "expand_aliases", &expand_aliases, (shopt_set_func_t *)NULL },
 #if defined (DEBUGGER)
-  { "extdebug", &debugging_mode, (shopt_set_func_t *)NULL },
+  { "extdebug", &debugging_mode, shopt_set_debug_mode },
 #endif
 #if defined (EXTENDED_GLOB)
   { "extglob", &extended_glob, (shopt_set_func_t *)NULL },
@@ -142,8 +150,8 @@ static struct {
 #if defined (READLINE)
   { "force_fignore", &force_fignore, (shopt_set_func_t *)NULL },
 #endif
-  { "globstar", &glob_star, (shopt_set_func_t *)NULL },
   { "globasciiranges", &glob_asciirange, (shopt_set_func_t *)NULL },
+  { "globstar", &glob_star, (shopt_set_func_t *)NULL },
   { "gnu_errfmt", &gnu_error_format, (shopt_set_func_t *)NULL },
 #if defined (HISTORY)
   { "histappend", &force_append_history, (shopt_set_func_t *)NULL },
@@ -154,6 +162,7 @@ static struct {
   { "hostcomplete", &perform_hostname_completion, shopt_enable_hostname_completion },
 #endif
   { "huponexit", &hup_on_exit, (shopt_set_func_t *)NULL },
+  { "inherit_errexit", &inherit_errexit, (shopt_set_func_t *)NULL },
   { "interactive_comments", &interactive_comments, set_shellopts_after_change },
   { "lastpipe", &lastpipe_opt, (shopt_set_func_t *)NULL },
 #if defined (HISTORY)
@@ -229,6 +238,7 @@ shopt_builtin (list)
 	case 'p':
 	  flags |= PFLAG;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -259,32 +269,67 @@ shopt_builtin (list)
 }
 
 /* Reset the options managed by `shopt' to the values they would have at
-   shell startup. */
+   shell startup.  Variables from shopt_vars. */
 void
 reset_shopt_options ()
 {
+  autocd = cdable_vars = cdspelling = 0;
+  check_hashed_filenames = CHECKHASH_DEFAULT;
+  check_window_size = CHECKWINSIZE_DEFAULT;
   allow_null_glob_expansion = glob_dot_filenames = 0;
-  cdable_vars = mail_warning = 0;
-  no_exit_on_failed_exec = print_shift_error = 0;
-  check_hashed_filenames = cdspelling = expand_aliases = 0;
-
+  no_exit_on_failed_exec = 0;
+  expand_aliases = 0;
+  extended_quote = 1;
+  fail_glob_expansion = 0;
+  glob_asciirange = GLOBASCII_DEFAULT;
+  glob_star = 0;
+  gnu_error_format = 0;
+  hup_on_exit = 0;
+  inherit_errexit = 0;
+  interactive_comments = 1;
+  lastpipe_opt = 0;
+  mail_warning = 0;
+  glob_ignore_case = match_ignore_case = 0;
+  print_shift_error = 0;
   source_uses_path = promptvars = 1;
 
-  check_window_size = CHECKWINSIZE_DEFAULT;
+#if defined (JOB_CONTROL)
+  check_jobs_at_exit = 0;
+#endif
 
 #if defined (EXTENDED_GLOB)
-  extended_glob = 0;
+  extended_glob = EXTGLOB_DEFAULT;
 #endif
 
 #if defined (HISTORY)
-  literal_history = force_append_history = 0;
+  literal_history = 0;
+  force_append_history = 0;
   command_oriented_history = 1;
 #endif
 
 #if defined (READLINE)
+  complete_fullquote = 1;
+  force_fignore = 1;
   hist_verify = history_reediting = 0;
   perform_hostname_completion = 1;
+#  if DIRCOMPLETE_EXPAND_DEFAULT
+  dircomplete_expand = 1;
+#  else
+  dircomplete_expand = 0;
 #endif
+  dircomplete_spelling = 0;
+  no_empty_command_completion = 0;
+#endif
+
+#if defined (PROGRAMMABLE_COMPLETION)
+  prog_completion_enabled = 1;
+#endif
+
+#if defined (DEFAULT_ECHO_TO_XPG) || defined (STRICT_POSIX)
+  xpg_echo = 1;
+#else
+  xpg_echo = 0;
+#endif /* DEFAULT_ECHO_TO_XPG */
 
   shopt_login_shell = login_shell;
 }
@@ -316,6 +361,7 @@ toggle_shopts (mode, list, quiet)
 {
   WORD_LIST *l;
   int ind, rval;
+  SHELL_VAR *v;
 
   for (l = list, rval = EXECUTION_SUCCESS; l; l = l->next)
     {
@@ -333,7 +379,9 @@ toggle_shopts (mode, list, quiet)
 	}
     }
 
-  set_bashopts ();
+  /* Don't set $BASHOPTS here if it hasn't already been initialized */
+  if (v = find_variable ("BASHOPTS"))
+    set_bashopts ();
   return (rval);
 }
 
@@ -479,6 +527,18 @@ set_shellopts_after_change (option_name, mode)
 }
 
 static int
+shopt_set_debug_mode (option_name, mode)
+     char *option_name;
+     int mode;
+{
+#if defined (DEBUGGER)
+  error_trace_mode = function_trace_mode = debugging_mode;
+  set_shellopts ();
+#endif
+  return (0);
+}
+
+static int
 shopt_enable_hostname_completion (option_name, mode)
      char *option_name;
      int mode;
@@ -499,7 +559,7 @@ set_compatibility_level (option_name, mode)
   if (mode)
     {
       shopt_compat31 = shopt_compat32 = 0;
-      shopt_compat40 = shopt_compat41 = shopt_compat42 = 0;
+      shopt_compat40 = shopt_compat41 = shopt_compat42 = shopt_compat43 = 0;
       ind = find_shopt (option_name);
       *shopt_vars[ind].value = mode;
     }
@@ -515,6 +575,8 @@ set_compatibility_level (option_name, mode)
     shell_compatibility_level = 41;
   else if (shopt_compat42)
     shell_compatibility_level = 42;
+  else if (shopt_compat43)
+    shell_compatibility_level = 43;
   else
     shell_compatibility_level = DEFAULT_COMPAT_LEVEL;
 
@@ -526,11 +588,14 @@ set_compatibility_level (option_name, mode)
 void
 set_compatibility_opts ()
 {
-  shopt_compat31 = shopt_compat32 = shopt_compat40 = shopt_compat41 = shopt_compat42 = 0;
+  shopt_compat31 = shopt_compat32 = 0;
+  shopt_compat40 = shopt_compat41 = shopt_compat42 = shopt_compat43 = 0;
   switch (shell_compatibility_level)
     {
       case DEFAULT_COMPAT_LEVEL:
 	break;
+      case 43:
+	shopt_compat43 = 1; break;
       case 42:
 	shopt_compat42 = 1; break;
       case 41:
@@ -707,7 +772,11 @@ parse_bashopts (value)
     {
       ind = find_shopt (vname);
       if (ind >= 0)
-        *shopt_vars[ind].value = 1;
+	{
+          *shopt_vars[ind].value = 1;
+	  if (shopt_vars[ind].set_func)
+	    (*shopt_vars[ind].set_func) (shopt_vars[ind].name, 1);
+	}
       free (vname);
     }
 }

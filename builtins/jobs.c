@@ -75,6 +75,7 @@ jobs_builtin (list)
 	  state = JSTATE_STOPPED;
 	  break;
 
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -166,7 +167,7 @@ execute_list_with_replacements (list)
 }
 #endif /* JOB_CONTROL */
 
-#line 230 "./jobs.def"
+#line 231 "./jobs.def"
 
 #if defined (JOB_CONTROL)
 int
@@ -192,6 +193,7 @@ disown_builtin (list)
 	case 'r':
 	  running_jobs = 1;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);

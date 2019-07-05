@@ -61,9 +61,13 @@ static int bash_set_history __P((int, char *));
 static const char * const on = "on";
 static const char * const off = "off";
 
+static int previous_option_value;
+
 /* A struct used to match long options for set -o to the corresponding
    option letter or internal variable.  The functions can be called to
-   dynamically generate values. */
+   dynamically generate values.  If you add a new variable name here
+   that doesn't have a corresponding single-character option letter, make
+   sure to set the value appropriately in reset_shell_options. */
 const struct {
   char *name;
   int letter;
@@ -204,17 +208,52 @@ get_minus_o_opts ()
   return ret;
 }
 
+char *
+get_current_options ()
+{
+  char *temp;
+  int i;
+
+  temp = (char *)xmalloc (1 + N_O_OPTIONS);
+  for (i = 0; o_options[i].name; i++)
+    {
+      if (o_options[i].letter)
+	temp[i] = *(find_flag (o_options[i].letter));
+      else
+	temp[i] = GET_BINARY_O_OPTION_VALUE (i, o_options[i].name);
+    }
+  temp[i] = '\0';
+  return (temp);
+}
+
+void
+set_current_options (bitmap)
+     const char *bitmap;
+{
+  int i;
+
+  if (bitmap == 0)
+    return;
+  for (i = 0; o_options[i].name; i++)
+    {
+      if (o_options[i].letter)
+	change_flag (o_options[i].letter, bitmap[i] ? FLAG_ON : FLAG_OFF);
+      else
+	SET_BINARY_O_OPTION_VALUE (i, bitmap[i] ? FLAG_ON : FLAG_OFF, o_options[i].name);
+    }
+}
+
 static int
 set_ignoreeof (on_or_off, option_name)
      int on_or_off;
      char *option_name;
 {
   ignoreeof = on_or_off == FLAG_ON;
-  unbind_variable ("ignoreeof");
+  unbind_variable_noref ("ignoreeof");
   if (ignoreeof)
     bind_variable ("IGNOREEOF", "10", 0); 
   else
-    unbind_variable ("IGNOREEOF");
+    unbind_variable_noref ("IGNOREEOF");
   sv_ignoreeof ("IGNOREEOF");
   return 0;
 }
@@ -226,7 +265,7 @@ set_posix_mode (on_or_off, option_name)
 {
   posixly_correct = on_or_off == FLAG_ON;
   if (posixly_correct == 0)
-    unbind_variable ("POSIXLY_CORRECT");
+    unbind_variable_noref ("POSIXLY_CORRECT");
   else
     bind_variable ("POSIXLY_CORRECT", "y", 0);
   sv_strict_posix ("POSIXLY_CORRECT");
@@ -307,12 +346,13 @@ set_minus_o_option (on_or_off, option_name)
 	{
 	  if (o_options[i].letter == 0)
 	    {
+	      previous_option_value = GET_BINARY_O_OPTION_VALUE (i, o_options[i].name);
 	      SET_BINARY_O_OPTION_VALUE (i, on_or_off, option_name);
 	      return (EXECUTION_SUCCESS);
 	    }
 	  else
 	    {
-	      if (change_flag (o_options[i].letter, on_or_off) == FLAG_ERROR)
+	      if ((previous_option_value = change_flag (o_options[i].letter, on_or_off)) == FLAG_ERROR)
 		{
 		  sh_invalidoptname (option_name);
 		  return (EXECUTION_FAILURE);
@@ -467,10 +507,18 @@ initialize_shell_options (no_shellopts)
 void
 reset_shell_options ()
 {
+  pipefail_opt = 0;
+  ignoreeof = 0;
+
+#if defined (STRICT_POSIX)
+  posixly_correct = 1;
+#else
+  posixly_correct = 0;
+#endif
 #if defined (HISTORY)
+  dont_save_function_defs = 0;
   remember_on_history = enable_history_list = 1;
 #endif
-  ignoreeof = 0;
 }
 
 /* Set some flags from the word values in the input list.  If LIST is empty,
@@ -497,6 +545,14 @@ set_builtin (list)
     {
       switch (flag_name)
 	{
+	  case 'i':	/* don't allow set -i */
+	    s[0] = list_opttype;
+	    s[1] = 'i';
+	    s[2] = '\0';
+	    sh_invalidopt (s);
+	    builtin_usage ();
+	    return (EX_USAGE);
+	  CASE_HELPOPT;
 	  case '?':
 	    builtin_usage ();
 	    return (list_optopt == '?' ? EXECUTION_SUCCESS : EX_USAGE);
@@ -604,7 +660,7 @@ set_builtin (list)
   return (rv);
 }
 
-#line 746 "./set.def"
+#line 802 "./set.def"
 
 #define NEXT_VARIABLE()	any_failed++; list = list->next; continue;
 
@@ -613,9 +669,11 @@ unset_builtin (list)
   WORD_LIST *list;
 {
   int unset_function, unset_variable, unset_array, opt, nameref, any_failed;
-  char *name;
+  int global_unset_func, global_unset_var;
+  char *name, *tname;
 
   unset_function = unset_variable = unset_array = nameref = any_failed = 0;
+  global_unset_func = global_unset_var = 0;
 
   reset_internal_getopt ();
   while ((opt = internal_getopt (list, "fnv")) != -1)
@@ -623,14 +681,15 @@ unset_builtin (list)
       switch (opt)
 	{
 	case 'f':
-	  unset_function = 1;
+	  global_unset_func = 1;
 	  break;
 	case 'v':
-	  unset_variable = 1;
+	  global_unset_var = 1;
 	  break;
 	case 'n':
 	  nameref = 1;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -639,7 +698,7 @@ unset_builtin (list)
 
   list = loptend;
 
-  if (unset_function && unset_variable)
+  if (global_unset_func && global_unset_var)
     {
       builtin_error (_("cannot simultaneously unset a function and a variable"));
       return (EXECUTION_FAILURE);
@@ -657,9 +716,12 @@ unset_builtin (list)
 
       name = list->word->word;
 
+      unset_function = global_unset_func;
+      unset_variable = global_unset_var;
+
 #if defined (ARRAY_VARS)
       unset_array = 0;
-      if (!unset_function && valid_array_reference (name))
+      if (!unset_function && nameref == 0 && valid_array_reference (name, 0))
 	{
 	  t = strchr (name, '[');
 	  *t++ = '\0';
@@ -680,7 +742,7 @@ unset_builtin (list)
 
       /* Only search for functions here if -f supplied. */
       var = unset_function ? find_function (name)
-			   : (nameref ? find_variable_last_nameref (name) : find_variable (name));
+			   : (nameref ? find_variable_last_nameref (name, 0) : find_variable (name));
 
       /* Some variables (but not functions yet) cannot be unset, period. */
       if (var && unset_function == 0 && non_unsettable_p (var))
@@ -689,11 +751,15 @@ unset_builtin (list)
 	  NEXT_VARIABLE ();
 	}
 
+      /* if we have a nameref we want to use it */
+      if (var && unset_function == 0 && nameref == 0 && STREQ (name, name_cell(var)) == 0)
+	name = name_cell (var);
+
       /* Posix.2 says try variables first, then functions.  If we would
 	 find a function after unsuccessfully searching for a variable,
 	 note that we're acting on a function now as if -f were
 	 supplied.  The readonly check below takes care of it. */
-      if (var == 0 && unset_variable == 0 && unset_function == 0)
+      if (var == 0 && nameref == 0 &&  unset_variable == 0 && unset_function == 0)
 	{
 	  if (var = find_function (name))
 	    unset_function = 1;
@@ -711,28 +777,51 @@ unset_builtin (list)
 #if defined (ARRAY_VARS)
       if (var && unset_array)
 	{
-	  if (array_p (var) == 0 && assoc_p (var) == 0)
+	  /* Let unbind_array_element decide what to do with non-array vars */
+	  tem = unbind_array_element (var, t);
+	  if (tem == -2 && array_p (var) == 0 && assoc_p (var) == 0)
 	    {
 	      builtin_error (_("%s: not an array variable"), var->name);
 	      NEXT_VARIABLE ();
 	    }
-	  else
-	    {
-	      tem = unbind_array_element (var, t);
-	      if (tem == -1)
-		any_failed++;
-	    }
+	  else if (tem < 0)
+	    any_failed++;
 	}
       else
 #endif /* ARRAY_VARS */
-      tem = unset_function ? unbind_func (name) : (nameref ? unbind_nameref (name) : unbind_variable (name));
+      /* If we're trying to unset a nameref variable whose value isn't a set
+	 variable, make sure we still try to unset the nameref's value */
+      if (var == 0 && nameref == 0 && unset_function == 0)
+	{
+	  var = find_variable_last_nameref (name, 0);
+	  if (var && nameref_p (var))
+	    {
+#if defined (ARRAY_VARS)
+	      if (valid_array_reference (nameref_cell (var), 0))
+		{
+		  tname = savestring (nameref_cell (var));
+		  if (var = array_variable_part (tname, &t, 0))
+		    tem = unbind_array_element (var, t);
+		  free (tname);
+		}
+	      else
+#endif
+		tem = unbind_variable (nameref_cell (var));
+	    }
+	  else
+	    tem = unbind_variable (name);
+	}
+      else
+	tem = unset_function ? unbind_func (name) : (nameref ? unbind_nameref (name) : unbind_variable (name));
 
       /* This is what Posix.2 says:  ``If neither -f nor -v
 	 is specified, the name refers to a variable; if a variable by
 	 that name does not exist, a function by that name, if any,
 	 shall be unset.'' */
-      if (tem == -1 && unset_function == 0 && unset_variable == 0)
+      if (tem == -1 && nameref == 0 && unset_function == 0 && unset_variable == 0)
 	tem = unbind_func (name);
+
+      name = list->word->word;		/* reset above for namerefs */
 
       /* SUSv3, POSIX.1-2001 say:  ``Unsetting a variable or function that
 	 was not previously set shall not be considered an error.'' */

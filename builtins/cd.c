@@ -56,7 +56,7 @@ static int eflag;	/* file scope so bindpwd() can see it */
 static int xattrflag;	/* O_XATTR support for openat */
 static int xattrfd = -1;
 
-#line 116 "./cd.def"
+#line 117 "./cd.def"
 
 /* Just set $PWD, don't change OLDPWD.  Used by `pwd -P' in posix mode. */
 static int
@@ -205,7 +205,7 @@ cd_builtin (list)
      WORD_LIST *list;
 {
   char *dirname, *cdpath, *path, *temp;
-  int path_index, no_symlinks, opt, lflag;
+  int path_index, no_symlinks, opt, lflag, e;
 
 #if defined (RESTRICTED_SHELL)
   if (restricted)
@@ -241,6 +241,7 @@ cd_builtin (list)
 	  xattrflag = 1;
 	  break;
 #endif
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -269,6 +270,13 @@ cd_builtin (list)
   else if (list->next)
     {
       builtin_error (_("too many arguments"));
+      return (EXECUTION_FAILURE);
+    }
+#endif
+#if 0
+  else if (list->word->word[0] == '\0')
+    {
+      builtin_error (_("null directory"));
       return (EXECUTION_FAILURE);
     }
 #endif
@@ -380,11 +388,15 @@ cd_builtin (list)
 	FREE (temp);
     }
 
-  builtin_error ("%s: %s", dirname, strerror (errno));
+  e = errno;
+  temp = printable_filename (dirname, 0);
+  builtin_error ("%s: %s", temp, strerror (e));
+  if (temp != dirname)
+    free (temp);
   return (EXECUTION_FAILURE);
 }
 
-#line 459 "./cd.def"
+#line 472 "./cd.def"
 
 /* Non-zero means that pwd always prints the physical directory, without
    symbolic links. */
@@ -411,6 +423,7 @@ pwd_builtin (list)
 	case 'L':
 	  verbatim_pwd = 0;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);

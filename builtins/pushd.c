@@ -5,7 +5,7 @@
 
 #line 84 "./pushd.def"
 
-#line 113 "./pushd.def"
+#line 115 "./pushd.def"
 
 #include <config.h>
 
@@ -74,6 +74,8 @@ pushd_builtin (list)
   char direction;
 
   orig_list = list;
+
+  CHECK_HELPOPT (list);
   if (list && list->word && ISOPTION (list->word->word, '-'))
     {
       list = list->next;
@@ -217,6 +219,8 @@ popd_builtin (list)
   char direction;
   char *which_word;
 
+  CHECK_HELPOPT (list);
+
   which_word = (char *)NULL;
   for (flags = 0, which = 0, direction = '+'; list; list = list->next)
     {
@@ -255,7 +259,7 @@ popd_builtin (list)
 	break;
     }
 
-  if (which > directory_list_offset || (directory_list_offset == 0 && which == 0))
+  if (which > directory_list_offset || (which < -directory_list_offset) || (directory_list_offset == 0 && which == 0))
     {
       pushd_error (directory_list_offset, which_word ? which_word : "");
       return (EXECUTION_FAILURE);
@@ -277,6 +281,11 @@ popd_builtin (list)
 	 remove that directory from the list and shift the remainder
 	 of the list into place. */
       i = (direction == '+') ? directory_list_offset - which : which;
+      if (i < 0 || i > directory_list_offset)
+	{
+	  pushd_error (directory_list_offset, which_word ? which_word : "");
+	  return (EXECUTION_FAILURE);
+	}
       free (pushd_directory_list[i]);
       directory_list_offset--;
 
@@ -298,6 +307,7 @@ dirs_builtin (list)
   intmax_t i;
   char *temp, *w;
 
+  CHECK_HELPOPT (list);
   for (flags = vflag = index_flag = 0, desired_index = -1, w = ""; list; list = list->next)
     {
       if (ISOPTION (list->word->word, 'l'))

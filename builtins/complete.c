@@ -94,6 +94,7 @@ static const struct _compopt {
   { "dirnames", COPT_DIRNAMES },
   { "filenames",COPT_FILENAMES},
   { "noquote", COPT_NOQUOTE },
+  { "nosort", COPT_NOSORT },
   { "nospace",	COPT_NOSPACE },
   { "plusdirs", COPT_PLUSDIRS },
   { (char *)NULL, 0 },
@@ -126,7 +127,7 @@ find_compopt (name)
 /* Build the actions and compspec options from the options specified in LIST.
    ACTP is a pointer to an unsigned long in which to place the bitmap of
    actions.  OPTP is a pointer to an unsigned long in which to place the
-   btmap of compspec options (arguments to `-o').  PP, if non-null, gets 1
+   bitmap of compspec options (arguments to `-o').  PP, if non-null, gets 1
    if -p is supplied; RP, if non-null, gets 1 if -r is supplied.
    If either is null, the corresponding option generates an error.
    This also sets variables corresponding to options that take arguments as
@@ -280,6 +281,7 @@ build_actions (list, flagp, actp, optp)
 	case 'X':
 	  Xarg = list_optarg;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -606,7 +608,7 @@ print_cmd_completions (list)
   return (sh_chkwrite (ret));
 }
 
-#line 666 "./complete.def"
+#line 668 "./complete.def"
 
 int
 compgen_builtin (list)
@@ -692,7 +694,7 @@ compgen_builtin (list)
   return (rval);
 }
 
-#line 780 "./complete.def"
+#line 782 "./complete.def"
 
 int
 compopt_builtin (list)
@@ -706,7 +708,7 @@ compopt_builtin (list)
   ret = EXECUTION_SUCCESS;
 
   reset_internal_getopt ();
-  while ((opt = internal_getopt (list, "+o:DE")) != EOF)
+  while ((opt = internal_getopt (list, "+o:DE")) != -1)
     {
       opts = (list_opttype == '-') ? &opts_on : &opts_off;
 
@@ -727,6 +729,7 @@ compopt_builtin (list)
 	case 'E':
 	  Eflag = 1;
 	  break;
+	CASE_HELPOPT;
 	default:
 	  builtin_usage ();
 	  return (EX_USAGE);
@@ -782,6 +785,9 @@ compopt_builtin (list)
       pcomp_set_compspec_options (cs, opts_on, 1);
       pcomp_set_compspec_options (cs, opts_off, 0);
     }
+
+  if (wl)
+    dispose_words (wl);
 
   return (ret);
 }

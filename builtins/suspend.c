@@ -56,6 +56,7 @@ suspend_builtin (list)
       case 'f':
 	force++;
 	break;
+      CASE_HELPOPT;
       default:
 	builtin_usage ();
 	return (EX_USAGE);
