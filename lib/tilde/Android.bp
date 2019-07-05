@@ -1,0 +1,16 @@
+cc_library_static {
+    name: "libtilde",
+
+    cflags: [
+        "-DHAVE_CONFIG_H",
+        "-Wno-parentheses",
+    ],
+    srcs: [
+        "tilde.c",
+    ],
+    include_dirs: [
+        "external/bash",
+        "external/bash/include",
+        "external/bash/lib",
+    ],
+}

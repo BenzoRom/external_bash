@@ -1,0 +1,24 @@
+cc_library_static {
+    name: "libglob-bash",
+
+    cflags: [
+        "-DHAVE_CONFIG_H",
+        "-Wno-parentheses",
+        "-Wno-sign-compare",
+        "-Wno-unused-label",
+        "-Wno-unused-parameter",
+        "-Wno-unused-variable",
+    ],
+    srcs: [
+        "glob.c",
+        "smatch.c",
+        "strmatch.c",
+        "xmbsrtowcs.c",
+        "gmisc.c",
+    ],
+    include_dirs: [
+        "external/bash",
+        "external/bash/include",
+        "external/bash/lib",
+    ],
+}
